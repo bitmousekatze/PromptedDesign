@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Report a bug · Prompted</title>
+<meta name="description" content="Found something broken on Prompted? Tell us and we'll squash it.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/logo-icon.svg">
+<style>
+  :root {
+    --bg: #0a0a0a; --panel: #14171f; --panel2: #1b1f29; --line: #2a2f3a;
+    --text: #e6e9ef; --muted: #9aa3b2; --accent: #ffd700; --accent2: #4ecdc4; --bad: #ef4444;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font-family: 'Space Grotesk', -apple-system, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; }
+  .wrap { max-width: 560px; margin: 0 auto; padding: 48px 20px 100px; }
+  .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 26px; text-decoration: none; color: var(--text); }
+  .brand img { width: 34px; height: 34px; }
+  .brand strong { font-size: 18px; letter-spacing: .02em; }
+  h1 { font-size: 26px; margin: 0 0 6px; }
+  p.sub { color: var(--muted); margin: 0 0 26px; font-size: 14px; }
+  form { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 22px; }
+  label { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin: 16px 0 6px; }
+  label:first-of-type { margin-top: 0; }
+  label .req { color: var(--accent); }
+  input, textarea, select {
+    width: 100%; background: var(--panel2); border: 1px solid var(--line); border-radius: 8px;
+    color: var(--text); padding: 10px 12px; font-size: 14px; font-family: inherit;
+  }
+  input:focus, textarea:focus, select:focus { outline: none; border-color: var(--accent2); }
+  textarea { min-height: 110px; resize: vertical; }
+  button {
+    margin-top: 22px; width: 100%; background: var(--accent); color: #1a1024; border: none;
+    border-radius: 10px; padding: 12px; font-size: 15px; font-weight: 800; cursor: pointer; font-family: inherit;
+  }
+  button:disabled { opacity: .6; cursor: wait; }
+  .note { font-size: 12px; color: var(--muted); margin-top: 12px; }
+  .hidden { display: none !important; }
+  #thanks { background: var(--panel); border: 1px solid rgba(78,205,196,.45); border-radius: 14px; padding: 28px 22px; text-align: center; }
+  #thanks h2 { margin: 0 0 6px; color: var(--accent2); }
+  #error { color: var(--bad); font-size: 13px; margin-top: 12px; display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="brand" href="/">
+    <img src="/logo-icon.svg" alt="">
+    <strong>Prompted</strong>
+  </a>
+
+  <h1>🐛 Report a bug</h1>
+  <p class="sub">Something broken, weird, or slow? Tell us — the more detail, the faster we fix it.</p>
+
+  <form id="bugForm" action="https://formspree.io/f/meewdvoy" method="POST">
+    <label for="what">What happened? <span class="req">*</span></label>
+    <textarea id="what" name="what_happened" required
+      placeholder="e.g. Tapping 'Post' on a comment does nothing — the spinner just keeps going."></textarea>
+
+    <label for="steps">Steps to reproduce</label>
+    <textarea id="steps" name="steps_to_reproduce"
+      placeholder="1. Open any post&#10;2. Write a comment&#10;3. Tap Post"></textarea>
+
+    <label for="where">Where did it happen? (page or link)</label>
+    <input id="where" name="where" placeholder="e.g. the feed, prmpted.com/username/post/...">
+
+    <label for="severity">How bad is it?</label>
+    <select id="severity" name="severity">
+      <option value="annoying">Annoying — I can work around it</option>
+      <option value="blocking">Blocking — I can't do the thing at all</option>
+      <option value="data">Something looks wrong/lost (counts, posts, messages)</option>
+      <option value="cosmetic">Cosmetic — just looks off</option>
+    </select>
+
+    <label for="username">Your Prompted username <span style="font-weight:400">(optional)</span></label>
+    <input id="username" name="username" placeholder="so we can check your account's view of it">
+
+    <label for="email">Email <span style="font-weight:400">(optional — only if you want a reply)</span></label>
+    <input id="email" type="email" name="_replyto" placeholder="you@example.com">
+
+    <!-- Auto-captured context (visible in the email, no personal data beyond UA) -->
+    <input type="hidden" name="device" id="deviceField">
+    <input type="hidden" name="screen" id="screenField">
+    <input type="hidden" name="came_from" id="referrerField">
+    <input type="hidden" name="_subject" value="🐛 Prompted bug report (web)">
+    <!-- Honeypot -->
+    <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" style="display:none">
+
+    <button type="submit" id="submitBtn">Send bug report</button>
+    <div id="error">Couldn't send — mind trying again in a moment?</div>
+    <p class="note">Screenshots help a ton: upload one anywhere (or a Prompted post) and paste the link in the description.</p>
+  </form>
+
+  <div id="thanks" class="hidden">
+    <h2>Got it — thank you! 💛</h2>
+    <p>Your report is in our inbox. If you left an email, we'll follow up when it's fixed.</p>
+    <p><a href="/" style="color:var(--accent2)">← Back to Prompted</a></p>
+  </div>
+</div>
+
+<script>
+  // Context auto-capture — helps reproduce without asking "what device?"
+  document.getElementById('deviceField').value = navigator.userAgent;
+  document.getElementById('screenField').value = window.innerWidth + 'x' + window.innerHeight + ' @' + (window.devicePixelRatio || 1) + 'x';
+  document.getElementById('referrerField').value = document.referrer || '(direct)';
+
+  // AJAX submit for an inline thank-you instead of leaving the site.
+  const form = document.getElementById('bugForm');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    const err = document.getElementById('error');
+    btn.disabled = true; btn.textContent = 'Sending…'; err.style.display = 'none';
+    try {
+      const res = await fetch(form.action, {
+        method: 'POST',
+        body: new FormData(form),
+        headers: { 'Accept': 'application/json' },
+      });
+      if (!res.ok) throw new Error('send failed');
+      form.classList.add('hidden');
+      document.getElementById('thanks').classList.remove('hidden');
+    } catch {
+      err.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Send bug report';
+    }
+  });
+</script>
+</body>
+</html>
