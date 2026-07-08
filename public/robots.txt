@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Allow: /post/
+Allow: /explore
+Allow: /search
+Allow: /category/
+Allow: /tool/
+Allow: /workflow/
+
+Disallow: /api/
+Disallow: /onboarding
+
+Sitemap: https://prmpted.com/sitemap.xml

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>prmpted Games — Integration Guide</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+  :root { --bg:#0a0a0a; --bg2:#111; --bg3:#1a1a1a; --border:#2a2a2a; --text:#f0f0f0; --muted:#888; --teal:#4ECDC4; --gold:#C9A227; --purple:#a855f7; --green:#10A37F; --coral:#D97757; --blue:#4796E3; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--text);line-height:1.65;font-size:15px}
+  .wrap{max-width:880px;margin:0 auto;padding:48px 28px 80px}
+  h1{font-size:32px;font-weight:700;letter-spacing:-1px;margin-bottom:6px}
+  h1 .tag{color:var(--purple)}
+  .sub{color:var(--muted);margin-bottom:36px;font-size:14px}
+  h2{font-size:20px;font-weight:600;margin:40px 0 14px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+  h3{font-size:15px;font-weight:600;margin:20px 0 8px;color:var(--teal)}
+  p,li{color:#d4d4d4}
+  ul,ol{padding-left:22px;margin:8px 0 14px}
+  li{margin:4px 0}
+  code,pre{font-family:'JetBrains Mono',monospace;font-size:13px}
+  code{background:var(--bg3);padding:1px 6px;border-radius:4px;color:var(--gold)}
+  pre{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px;overflow-x:auto;margin:10px 0;color:#d4d4d4;line-height:1.55}
+  pre code{background:none;padding:0;color:inherit}
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--border)}
+  th{color:var(--muted);font-weight:500;font-size:12px;text-transform:uppercase;letter-spacing:0.5px}
+  .note{background:rgba(71,150,227,0.08);border-left:3px solid var(--blue);padding:12px 16px;border-radius:4px;margin:12px 0;font-size:14px}
+  .warn{background:rgba(217,119,87,0.08);border-left:3px solid var(--coral);padding:12px 16px;border-radius:4px;margin:12px 0;font-size:14px}
+  .ok{color:var(--green)} .bad{color:var(--coral)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>prmpted Games <span class="tag">/ Integration Guide</span></h1>
+<div class="sub">Everything you need to ship a browser game to prmpted.</div>
+
+<div class="note">This guide is paired with <code>prmpted.md</code> in the same kit. Hand the markdown file to your AI coding agent — it contains the same information formatted for an LLM to act on.</div>
+
+<h2>1. Will my game work?</h2>
+<p>prmpted Games embeds your game in a sandboxed iframe. To work, it must be <strong>100% client-side</strong>:</p>
+<ul>
+  <li>Static HTML / JS / CSS / assets only</li>
+  <li>No backend, no Node server, no <code>/api/*</code> calls to your own domain</li>
+  <li>External APIs (Firebase, public REST) are fine if they support CORS</li>
+</ul>
+
+<h2>2. Two ways to submit</h2>
+<table>
+  <tr><th>Method</th><th>When to use</th></tr>
+  <tr><td><strong>External URL</strong> (preferred)</td><td>Your game is live on Lovable, Replit, GitHub Pages, Netlify, itch.io, etc. Paste the URL.</td></tr>
+  <tr><td><strong>Zip upload</strong></td><td>You only have a build folder locally. The zip root must contain <code>index.html</code>.</td></tr>
+</table>
+
+<h2>3. Framework setup</h2>
+
+<h3>Vite</h3>
+<pre><code>// vite.config.ts
+export default defineConfig({
+  base: './',   // <- this line
+  // ...
+});</code></pre>
+<p>Then <code>npm run build</code>. Your build output (<code>dist/</code>) is what you host or zip.</p>
+
+<h3>React Router</h3>
+<p>Use <code>HashRouter</code>, not <code>BrowserRouter</code> — the sandbox does not serve fallback routes.</p>
+<pre><code>import { HashRouter, Routes, Route } from 'react-router-dom';
+
+&lt;HashRouter&gt;
+  &lt;Routes&gt;
+    &lt;Route path="/" element={&lt;Lobby /&gt;} /&gt;
+    &lt;Route path="/play" element={&lt;Game /&gt;} /&gt;
+  &lt;/Routes&gt;
+&lt;/HashRouter&gt;</code></pre>
+
+<h3>Create React App</h3>
+<pre><code>// package.json
+{ "homepage": "." }</code></pre>
+
+<h3>Next.js</h3>
+<div class="warn">Not directly supported — needs a server. Use <code>next export</code> only if your project has no server-side features.</div>
+
+<h2>4. The SDK</h2>
+<p>Paste this at the top of <code>&lt;head&gt;</code> in your <code>index.html</code>. No keys. No setup. Does nothing unless embedded in prmpted.</p>
+<pre><code>&lt;script&gt;
+(function(){
+  if (window.prmpted) return;
+  function send(m){ try { window.parent.postMessage(m, '*'); } catch(_){} }
+  function heartbeat(){
+    if (document.visibilityState !== 'visible') return;
+    send({ type: 'prmpted:heartbeat', t: Date.now() });
+  }
+  setInterval(heartbeat, 30000);
+  setTimeout(heartbeat, 2000);
+  window.prmpted = {
+    unlock: function(id){
+      if (!id || typeof id !== 'string') return;
+      send({ type: 'prmpted:achievement', id: id });
+    }
+  };
+})();
+&lt;/script&gt;</code></pre>
+
+<h2>5. Achievements (+15 BP each)</h2>
+<p>Call <code>window.prmpted.unlock('your_id')</code> whenever a player earns an achievement. First unlock per player awards <strong>+15 Builder Points</strong>. Repeats are deduped automatically.</p>
+<pre><code>// inside your game's achievement function
+function unlockAch(id) {
+  // ... your existing logic ...
+  try {
+    if (window.prmpted &amp;&amp; window.prmpted.unlock) window.prmpted.unlock(id);
+  } catch(_){}
+}</code></pre>
+
+<h3>Choosing IDs</h3>
+<p>Use stable, snake_case strings. They are the identity used for dedup; renaming after launch orphans existing unlocks.</p>
+<ul>
+  <li><code>first_blood</code></li>
+  <li><code>level_10_complete</code></li>
+  <li><code>no_damage_run</code></li>
+  <li><code>secret_room_found</code></li>
+</ul>
+
+<h2>6. Save state</h2>
+<p>If your game uses <code>localStorage</code> / <code>sessionStorage</code>, it just works. prmpted bridges storage calls to the parent and persists them per-user (Supabase if logged in, browser localStorage if anon). <strong>No code required.</strong></p>
+
+<h2>7. Sandbox limits</h2>
+<table>
+  <tr><th>Works <span class="ok">✓</span></th><th>Does not work <span class="bad">✗</span></th></tr>
+  <tr>
+    <td>Canvas, WebGL, WebAudio<br>Gamepad API<br>Fullscreen / pointer lock<br>Fetch to CORS URLs<br>localStorage (bridged)</td>
+    <td>Cookies<br>Top-level navigation<br>Popups to non-game URLs<br>Direct access to the parent page</td>
+  </tr>
+</table>
+
+<h2>8. Pre-flight checklist</h2>
+<ul>
+  <li>☐ Built with <code>base: './'</code> (or framework equivalent)</li>
+  <li>☐ Open built <code>index.html</code> by double-clicking — it works without a server</li>
+  <li>☐ DevTools shows no 404s for assets</li>
+  <li>☐ SDK <code>&lt;script&gt;</code> is present in the <em>built</em> <code>index.html</code>, not just source</li>
+  <li>☐ Every achievement-grant site calls <code>window.prmpted.unlock(...)</code></li>
+  <li>☐ Under 200 MB if zipping</li>
+  <li>☐ Thumbnail ready (1280×720 PNG/JPG)</li>
+</ul>
+
+<h2>9. Common failure modes</h2>
+<table>
+  <tr><th>Symptom</th><th>Cause</th><th>Fix</th></tr>
+  <tr><td>Iframe is blank / green</td><td>Absolute asset paths</td><td>Set <code>base: './'</code>, rebuild</td></tr>
+  <tr><td>Routes 404 on refresh</td><td><code>BrowserRouter</code></td><td>Switch to <code>HashRouter</code></td></tr>
+  <tr><td>Achievements never fire</td><td>SDK missing from built HTML</td><td>Add to source template, rebuild</td></tr>
+  <tr><td>No BP awarded</td><td>Player not logged in</td><td>BP is auth-only by design</td></tr>
+</table>
+
+<h2>10. Submit</h2>
+<p>Open the <strong>Games</strong> tab → <strong>Upload Game</strong>. Choose URL or Zip mode. Fill in title, description, the achievement IDs you wired up, and your AI-tool disclosure. A human reviewer approves before it appears in the public grid.</p>
+
+<div class="note" style="margin-top:32px">Tip: hand <code>prmpted.md</code> (in this same kit) to your AI coding agent and say <em>"integrate prmpted Games into this project per the instructions"</em>. The agent has everything it needs in that single file.</div>
+
+</div>
+</body>
+</html>

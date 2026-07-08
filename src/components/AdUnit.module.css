@@ -1,0 +1,89 @@
+/* AdUnit styles - extracted from appStyles.css (Phase 3 CSS modularization pilot).
+   ad-placeholder stays in appStyles.css because it's shared with DailyRewardModal. */
+
+.section {
+  padding: 0;
+  background: transparent;
+}
+
+.card {
+  position: relative;
+  background: var(--bg-card);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  border-radius: 16px;
+  padding: 0.75rem;
+  overflow: hidden;
+}
+
+.label {
+  display: block;
+  font-size: 0.625rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary, #888);
+  margin-bottom: 0.4rem;
+}
+
+.close {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  z-index: 2;
+  width: 22px;
+  height: 22px;
+  line-height: 1;
+  font-size: 16px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+}
+
+.close:hover {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+/* Bottom sticky ad banner */
+.bottomBanner {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 900;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 0 8px;
+  background: rgba(10, 10, 10, 0.92);
+  backdrop-filter: blur(8px);
+  border-top: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+}
+
+.bottomBanner .label {
+  margin-bottom: 2px;
+}
+
+/* Shared class - kept in appStyles.css for DailyRewardModal */
+.bottomBanner :global(.ad-placeholder) {
+  min-height: 60px;
+  width: 100%;
+  max-width: 728px;
+}
+
+.closeBanner {
+  top: 4px;
+  right: 8px;
+}
+
+/* Keep the bottom banner from covering the mobile bottom nav */
+@media (max-width: 900px) {
+  .bottomBanner {
+    bottom: 64px;
+  }
+}
